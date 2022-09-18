@@ -29,9 +29,10 @@ range(1, 20) // Observable -> stream
 
 |  #  | 목차                                      |
 | :-: | :------------------------------------------- |
-| 01  | [스트림](./Stream/README.md)     |
-| 02  | [ReactiveX의 다양한 연산자](./Operator/README.md)     |
-| 03  | [실전 예제](./Practice/README.md)     |
+| 01  | [Observable(스트림생성기)](./Stream/README.md)     |
+| 02  | [Observer(구독자)](./Observer/README.md)     |
+| 03  | [ReactiveX의 다양한 연산자](./Operator/README.md)     |
+| 04  | [실전 예제](./Practice/README.md)     |
 
 ## 참고하면 좋은 링크
 

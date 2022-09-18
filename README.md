@@ -8,6 +8,7 @@
 | 02  | [Observer(구독자)](./Observer/README.md)     |
 | 03  | [Operator](./Operator/README.md)     |
 | 04  | [Subject](./Subject/README.md)     |
+| 05  | [다양한 Operator 종류들](./OperatorTypes/README.md)     |
 ---
 
 ## 반응형 프로그래밍과 ReactiveX

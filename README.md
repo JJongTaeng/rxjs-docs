@@ -26,12 +26,15 @@ range(1, 20) // Observable -> stream
 5. 마지막으로 Observer 관찰자란 뜻으로 .subscribe를 사용합니다. 옵저버는 이 파이프만 쳐다보며 값을 기다리다 뭔가 나오는대로 최종 작업을 실행합니다.
 6. 옵저버가 파이프를 주시하며 발행물을 기다리는 것을 구독, subscribe로 표현합니다.
 
+### 마블 다이어그램
+- ReactiveX의 각 오퍼레이트를 다이어그램으로 이해를 돕는 자료가 많은데 다이어그램을 읽는 방법입니다.
+  ![](./마블다이어그램.png)
 
 |  #  | 목차                                      |
 | :-: | :------------------------------------------- |
 | 01  | [Observable(스트림생성기)](./Stream/README.md)     |
 | 02  | [Observer(구독자)](./Observer/README.md)     |
-| 03  | [ReactiveX의 다양한 연산자](./Operator/README.md)     |
+| 03  | [Operator](./Operator/README.md)     |
 | 04  | [실전 예제](./Practice/README.md)     |
 
 ## 참고하면 좋은 링크

@@ -1,5 +1,15 @@
 # RXJS
 
+## 목차
+
+|  #  | 목차                                      |
+| :-: | :------------------------------------------- |
+| 01  | [Observable(스트림생성기)](./Stream/README.md)     |
+| 02  | [Observer(구독자)](./Observer/README.md)     |
+| 03  | [Operator](./Operator/README.md)     |
+| 04  | [실전 예제](./Practice/README.md)     |
+---
+
 ## 반응형 프로그래밍과 ReactiveX
 
 - ReactiveX는 함수형 프로그래밍의 기본 골격을 갖추고 있습니다.
@@ -30,15 +40,7 @@ range(1, 20) // Observable -> stream
 - ReactiveX의 각 오퍼레이트를 다이어그램으로 이해를 돕는 자료가 많은데 다이어그램을 읽는 방법입니다.
   ![](./마블다이어그램.png)
 
-## 목차
 
-|  #  | 목차                                      |
-| :-: | :------------------------------------------- |
-| 01  | [Observable(스트림생성기)](./Stream/README.md)     |
-| 02  | [Observer(구독자)](./Observer/README.md)     |
-| 03  | [Operator](./Operator/README.md)     |
-| 04  | [실전 예제](./Practice/README.md)     |
----
 ## 참고하면 좋은 링크
 
 🔗 [공식 사이트. RxJS에 대한 상세한 가이드와 문서 제공](https://rxjs-dev.firebaseapp.com/guide/overview)

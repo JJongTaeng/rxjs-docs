@@ -7,7 +7,7 @@
 | 01  | [Observable(스트림생성기)](./Stream/README.md)     |
 | 02  | [Observer(구독자)](./Observer/README.md)     |
 | 03  | [Operator](./Operator/README.md)     |
-| 04  | [실전 예제](./Practice/README.md)     |
+| 04  | [Subject](./Subject/README.md)     |
 ---
 
 ## 반응형 프로그래밍과 ReactiveX

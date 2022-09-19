@@ -234,7 +234,105 @@ zip(obs4$, obs5$).subscribe(console.log)
 ```
 
 **지금은 zip 대신 zipWith를 사용하는 것이 권장됩니다.**
+
 ## take와 skip
+### take 관련 Operator
+
+#### take
+- 앞에서부터 N개 선택
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { take, filter, pluck } = rxjs.operators
+```
+```javascript
+range(1, 20).pipe(
+  take(5)
+).subscribe(console.log) // 1 2 3 4 5
+```
+```javascript
+range(1, 20).pipe(
+  filter(x => x % 2 === 0),
+  take(5)
+).subscribe(console.log) // 2 4 6 8 10
+```
+```javascript
+range(1, 20).pipe(
+  take(5),
+  filter(x => x % 2 === 0) // 2 4 
+).subscribe(console.log)
+```
+```javascript
+interval(1000).pipe(
+  take(5)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE') //  1 2 3 4 5 COMPLETE
+)
+```
+
+```javascript
+fromEvent(document, 'click').pipe(
+  pluck('x'),
+  filter(x => x < 200),
+  take(5),
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+) // x 좌표가 200보다 작은 곳에 클릭하는 이벤트가 5번만 발생함
+```
+#### takeLast
+- 뒤에서부터 N개 선택
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { takeLast, take, pluck } = rxjs.operators
+```
+```javascript
+range(1, 20).pipe(
+    takeLast(5)
+).subscribe(console.log)
+```
+```javascript
+interval(1000).pipe(
+    takeLast(5)
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+```javascript
+interval(1000).pipe(
+    take(10),
+    takeLast(5)
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+```javascript
+fromEvent(document, 'click').pipe(
+  takeLast(5),
+  pluck('x')
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+```
+```javascript
+fromEvent(document, 'click').pipe(
+    take(10),
+    takeLast(5),
+    pluck('x')
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
 
 ## 시간을 다루는 연산자
 

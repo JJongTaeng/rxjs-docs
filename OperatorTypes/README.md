@@ -310,7 +310,7 @@ interval(1000).pipe(
     console.log,
     err => console.error(err),
     _ => console.log('COMPLETE')
-)
+) // take 10 번 할 동안 출력이 없다가 10번 모두 실행된후 5 ~ 9 까지 한번에 출력
 ```
 ```javascript
 fromEvent(document, 'click').pipe(
@@ -331,9 +331,71 @@ fromEvent(document, 'click').pipe(
     console.log,
     err => console.error(err),
     _ => console.log('COMPLETE')
-)
+) // 마찬가지로 10번 클릭 후 한번애 5개 받아옴
 ```
 
+#### takeWhile
+- ~ 하는 동안 선택
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { takeWhile, takeLast, filter, pluck } = rxjs.operators
+```
+```javascript
+range(1, 20).pipe(
+  takeWhile(x => x <= 10)
+).subscribe(console.log) // 1 ~ 20 중 10보다 작은 경우 발행
+```
+```javascript
+interval(1000).pipe(
+  takeWhile(x => x < 5)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+) // 인터벌 5번 발행 
+```
+```javascript
+fromEvent(document, 'click').pipe(
+  pluck('x'),
+  takeWhile(x => x < 200),
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+) // x 좌표가 200 보다 작은 경우만 발행
+```
+
+### skip 관련 Operator
+#### skip
+- 앞에서부터 N개씩 건너뛰기
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { skip, filter, pluck } = rxjs.operators
+```
+```javascript
+range(1, 20).pipe(
+    skip(5)
+).subscribe(console.log)
+```
+```javascript
+interval(1000).pipe(
+    skip(5)
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+```javascript
+fromEvent(document, 'click').pipe(
+    skip(5),
+    pluck('x')
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
 ## 시간을 다루는 연산자
 
 ## 스트림을 결합하는 연산자

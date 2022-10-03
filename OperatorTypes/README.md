@@ -827,4 +827,199 @@ fromEvent(document, 'click').pipe(
 
 ## 스트림을 결합하는 연산자
 
+### merge
+- 두 스트림을 순서와 관계없이 병합
+```javascript
+const { merge, interval, fromEvent } = rxjs
+const { map } = rxjs.operators
+
+const interval$ = interval(1000).pipe(map(_ => 'interval'))
+const click$ = fromEvent(document, 'click').pipe(map(_ => 'click'))
+
+merge(interval$, click$).subscribe(console.log)
+```
+- 클릭이벤트, 인터벌 스트림 두 개 별도로 발행됩니다.
+
+```javascript
+const { merge, interval } = rxjs
+const { map, take } = rxjs.operators
+
+const intv1$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 1'), take(3))
+const intv2$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 2'), take(6))
+const intv3$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 3'), take(9))
+const intv4$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 4'), take(9))
+const intv5$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 5'), take(9))
+
+merge(intv1$, intv2$, intv3$, intv4$, intv5$, 3)
+.subscribe(console.log)
+```
+- merge의 마지막 인자로 number를 전달하면 구독을 발행하는 최대개수입니다.
+- intv1$, intv2$, intv3$이 먼저 발행되고, intv1$이 완료되면, intv4$ 가 추가적으로 발행됩니다.
+
+### concat
+- 순서 대로 이어붙임
+- `merge(...streams, 1)` 과 동일하다고 볼 수 있습니다.
+```javascript
+const { concat, interval } = rxjs
+const { map, take } = rxjs.operators
+
+const intv1$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 1'), take(3))
+const intv2$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 2'), take(3))
+const intv3$ = interval(1000).pipe(
+    map(_ => 'INTERVAL 3'), take(3))
+
+concat(intv1$, intv2$, intv3$)
+.subscribe(console.log)
+```
+
+
+```javascript
+const { concat, interval, fromEvent } = rxjs
+const { map, take } = rxjs.operators
+
+const interval$ = interval(1000).pipe(
+    map(_ => 'interval'), take(5))
+const click$ = fromEvent(document, 'click').pipe(map(_ => 'click'))
+
+concat(interval$, click$).subscribe(console.log)
+```
+- 5번의 인터벌 후, 클릭 이벤트 구독물 발행
+- concat은 모든 옵저버블을 바로 구독하는 것이 아니라 순차적으로 구독합니다.
+- 따라서 5번의 interval이 모두 발행하기 전엔 클릭 이벤트가 구독되어 발행하지 않습니다.
+
+### mergeMap
+```javascript
+const { interval, fromEvent } = rxjs
+const { mergeMap, map, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    mergeMap(e => interval(1000).pipe(
+        map(i => e.x + ' : ' + i),
+        take(5)
+    ))
+).subscribe(console.log)
+```
+- 클릭 후 x좌표를 5초 동안 5개 출력
+
+```javascript
+const { of } = rxjs
+const { ajax } = rxjs.ajax
+const { mergeMap, pluck } = rxjs.operators
+
+of(3, 15, 4, 9, 1, 7).pipe(
+    mergeMap(keyword => ajax(
+            `http://127.0.0.1:3000/people/${keyword}`
+        ).pipe(
+            pluck('response', 'first_name')
+        )
+    )
+).subscribe(console.log)
+```
+- merge와 다르게 스트림을 합쳐서 다른 스트림으로 생성
+- 예제는 특정 ajax 요청을 하고, 해당 응답을 모두 합쳐서 새로운 스트림으로 만듬
+- 새로운 스트림이란 응답 객체에서 first_name 값을 pluck한 스트림
+- 위 예제에서 응답 시간이 각각 다르기 때문에 합쳐진 스트림의 순서는 보장되지 않습니다.
+- 응답 순서대로, 스트림이 합쳐집니다.
+```javascript
+const { of } = rxjs
+const { ajax } = rxjs.ajax
+const { mergeMap, pluck } = rxjs.operators
+
+of(3, 15, 4, 9, 1, 7).pipe(
+    mergeMap(keyword => ajax(
+            `http://127.0.0.1:3000/people/${keyword}`
+        ).pipe(
+            pluck('response', 'first_name')
+        )
+    , 3) // 한 번에 3개 스트림만
+).subscribe(console.log)
+```
+- merge와 동일하게 마지막 인자로 정수를 전달하면, 몇개의 스트림을 처리할 것인지 정할 수 있습니다.
+
+### concatMap
+```javascript
+const { interval, fromEvent } = rxjs
+const { concatMap, map, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    concatMap(e => interval(1000).pipe(
+        map(i => e.x + ' : ' + i),
+        take(5)
+    ))
+).subscribe(console.log)
+```
+- mergeMap과 다르게 순서가 보장됩니다.
+- 클릭 시 5번의 interval 발생 후 다음 클릭에 대한 interval을 발행합니다.
+```javascript
+const { of } = rxjs
+const { ajax } = rxjs.ajax
+const { concatMap, pluck } = rxjs.operators
+
+of(3, 15, 4, 9, 1, 7).pipe(
+    concatMap(keyword => ajax(
+            `http://127.0.0.1:3000/people/${keyword}`
+        ).pipe(
+            pluck('response', 'first_name')
+        )
+    )
+).subscribe(console.log)
+```
+- 3번의 응답이 오기전까지 다른 스트림에대해 발행하지 않습니다.
+- 따라서 순서가 보장됩니다.
+
+### switchMap
+- 기준 스트림이 새 값을 발행하면 진행중이던 스트림을 멈춤
+```javascript
+const { interval, fromEvent } = rxjs
+const { switchMap, map, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    switchMap(e => interval(1000).pipe(
+        map(i => e.x + ' : ' + i),
+        take(5)
+    ))
+).subscribe(console.log)
+```
+
+### mergeMapTo
+-  값은 두번째 스트림에서만 발행
+```javascript
+const { interval, fromEvent } = rxjs
+const { mergeMapTo, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    mergeMapTo(interval(1000).pipe(take(5))),
+).subscribe(console.log)
+```
+- 클릭 이벤트에서 발생한 스트림이 필요없는 경우 사용
+- concatMapTo, switchMapTo 모두 동일
+### concatMapTo
+```javascript
+const { interval, fromEvent } = rxjs
+const { concatMapTo, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    concatMapTo(interval(1000).pipe(take(5))),
+).subscribe(console.log)
+```
+### switchMapTo
+```javascript
+const { interval, fromEvent } = rxjs
+const { switchMapTo, take } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    switchMapTo(interval(1000).pipe(take(5))),
+).subscribe(console.log)
+```
+
+
+
+
 ## 기타 유용한 연산자

@@ -678,6 +678,153 @@ ajax('http://127.0.0.1:3000/people/name/random').pipe(
 ```
 - HTTP 통신의 응답이 5초동안 없으면, 다른 옵저버블로 값을 사용할 수 있습니다.
 
+### debounceTime
+```javascript
+const { fromEvent } = rxjs
+const { timeInterval, pluck, scan, tap } = rxjs.operators
+const { debounceTime } = rxjs.operators
+
+const clicks$ = fromEvent(document, 'click').pipe(
+  timeInterval(),
+  pluck('interval'),
+  scan((acc, i) => acc + i, 0),
+  tap(x => console.log('CLICKED: ' + x))
+)
+
+clicks$.pipe(
+  debounceTime(1000)
+).subscribe(x => console.log('OUTPUT: -------- ' + x))
+```
+- 특정 시간 안에 클릭 이벤트 발생 시 마지막 이벤트만 1초 뒤 발행
+- 정리하면, 1초안에 이벤트 발생 시 발행을 멈추고, 1초 뒤 마지막으로 값 발행
+
+### auditTime
+```javascript
+const { auditTime } = rxjs.operators
+
+clicks$.pipe(
+    auditTime(1000)
+).subscribe(x => console.log('OUTPUT: -------- ' + x))
+```
+- 이벤트 발생 후 1초 뒤 발행을 보장하고, 1초안에 마지막 값을 발행(1초안 이전 값은 무시)
+
+### sampleTime
+```javascript
+const { sampleTime } = rxjs.operators
+
+clicks$.pipe(
+    sampleTime(1000),
+    timeInterval()
+).subscribe(x => console.log('OUTPUT: -------- ' + x.value + ' :' + x.interval))
+/*
+출력 예제
+"CLICKED: 450"
+"CLICKED: 947"
+"OUTPUT: -------- 947 :1002"
+"CLICKED: 1331"
+"CLICKED: 1614"
+"CLICKED: 1898"
+"OUTPUT: -------- 1898 :998"
+ */
+```
+- 1초라는 시간이 보장되고, 1초마다 값을 발행하는데, 값이 없으면 발행하지 않음
+- 첫 이벤트 발생 후 1초 인터벌로 끊어서 값을 발행함
+- 출력 예제를 보면 OUTPUT하는 시점이 1초 인터벌을 보장하는 것을 볼 수 있습니다.
+### throttleTime
+- 두번째 인자로 전달하는 값은 스케줄러를 전달하는데, 해당 값은 undefined로 고정한 설명입니다.
+
+#### throttleTime(1000, undefined, { leading: true, trailing: false })
+```javascript
+const { throttleTime } = rxjs.operators
+
+clicks$.pipe(
+    throttleTime(1000, undefined, { 
+    	leading: true, trailing: false 
+    })
+).subscribe(x => console.log('OUTPUT: -------- ' + x))
+```
+- leading이 값이 true 인 경우 첫 이벤트를 무조건 발행하고, 이후 1초동안의 값을 발행하지 않습니다.
+- 1초후 부터 다시 첫 이벤트를 무조건 발행하고, 이후 1초동안 값을 발행하지 않습니다.
+
+#### throttleTime(1000, { leading: false, trailing: true })
+```javascript
+const { throttleTime } = rxjs.operators
+
+clicks$.pipe(
+    throttleTime(1000, undefined, { 
+    	leading: false, trailing: true 
+    })
+).subscribe(x => console.log('OUTPUT: -------- ' + x))
+```
+- leading: false, trailing: true 인 경우 이벤트 발생 후 1초 뒤 발행을 하는데 마지막 이벤트를 발행합니다.
+
+#### throttleTime(1000, { leading: true, trailing: true })
+- 둘다 true인 경우 첫값과 마지막 값 모두 발행합니다.
+
+### debounce
+```javascript
+const { fromEvent, interval } = rxjs
+const { debounce, audit, pluck } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+	pluck('y'),
+	debounce(y => interval(y * 10))
+).subscribe(console.log);
+```
+- interval 값을 커스터마이징이 가능해집니다. 고정값이 아니라 클릭이벤트 y의 좌표 값에 따라 인터벌이 유동적이게 됩니다.
+- `debounce(y => interval(1000)`으로 사용하면, debounceTime(1000)과 동일합니다.
+
+```javascript
+const { BehaviorSubject, fromEvent, interval } = rxjs
+const { debounce, tap } = rxjs.operators
+
+const bs = new BehaviorSubject(1000)
+
+fromEvent(document, 'click').pipe(
+    tap(_ => console.log(bs.getValue())),
+    debounce(e => interval(bs.getValue())),
+    tap(_ => bs.next(bs.getValue() + 500))
+).subscribe(_ => console.log('CLICK'));
+```
+- BehaviorSubject 는 초기 값을 갖고 있고, 클릭 이벤트 발생 시마다 bs의 값을 500만큼 더하고, debounce의 인터벌로 사용합니다.
+- 클릭 시마다 인터벌은 점점 늦어지게 됩니다.
+- tap은 부수효과를 낼 수 있습니다.
+
+### audit
+```javascript
+fromEvent(document, 'click').pipe(
+	pluck('y'),
+	audit(y => interval(y * 10))
+).subscribe(console.log);
+```
+
+### sample
+```javascript
+const { fromEvent, interval } = rxjs
+const { sample } = rxjs.operators
+
+interval(1000).pipe(
+  sample(fromEvent(document, 'click'))
+).subscribe(console.log);
+```
+- 첫번째 스트림이 예제에선 인터벌 1초
+- 두번째 스트림이 발행된 마지막 시점의 값을 발행
+- 1초는 보장되고 1초안에 발생한 마지막 두번째 스트림을 발행
+
+### throttle
+```javascript
+const { fromEvent, interval } = rxjs
+const { throttle, timeInterval, pluck } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+	throttle(e => interval(1000)),
+    timeInterval(),
+    pluck('interval')
+).subscribe(console.log);
+```
+- throttle은 leading: true가 기본 값
+- debounce와 마찬가지로, 인터벌 값을 유동적으로 변경할 수 있습니다.
+
 ## 스트림을 결합하는 연산자
 
 ## 기타 유용한 연산자

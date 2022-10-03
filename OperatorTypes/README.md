@@ -550,7 +550,133 @@ obs1$.pipe(
 - 5초 동안은 skipUntil로 발행이 skip되기 때문에!
 
 ## 시간을 다루는 연산자
+### delay
+- 주어진 시간만큼 지연 후 발행
+```javascript
+const { interval, fromEvent } = rxjs
+const { delay, tap, take } = rxjs.operators
 
+interval(1000).pipe(
+  take(5),
+  tap(x => console.log(x + ' 발행시작')),
+  delay(1500)
+).subscribe(x => console.log(x + ' 발행완료'))
+```
+- 0 ~ 4의 값이 1.5초 뒤에 발행됨.
+- 따라서 "발행 시작"이 출력되고 1.5초뒤에 발행완료가 출력됨.
+```javascript
+fromEvent(document, 'click').pipe(
+    tap(e => console.log(e.x + ' 발행시작')),
+    delay(1500)
+).subscribe(e => console.log(e.x + ' 발행완료'))
+```
+- 마찬가지로 클릭 이벤트 1.5초뒤에 "발행완료" 출력.
+
+### timestamp
+- 발생 시각을 추가적으로 출력
+```javascript
+const { fromEvent } = rxjs
+const { timestamp, pluck, map } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+  pluck('x'),
+  timestamp()
+).subscribe(console.log)
+
+/* 출력 형태
+{
+  timestamp: 1664763896463,
+  value: 192
+}
+*/
+```
+- 기존의 값을 value 프로퍼티에 할당해서 객체형태로 발행합니다.
+```javascript
+fromEvent(document, 'click').pipe(
+    pluck('x'),
+    timestamp(),
+    map(x => {
+        x.timestamp = new Date(x.timestamp).toString()
+        return x
+    })
+).subscribe(console.log)
+```
+- 위처럼 한국 시간으로 변경해서 사용이 가능합니다.
+
+### timeInterval
+- 이전 발행물과의 시간 차
+```javascript
+const { fromEvent, interval } = rxjs
+const { timeInterval, pluck } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    pluck('x'),
+    timeInterval()
+).subscribe(console.log)
+```
+```javascript
+interval(1000).pipe(
+  timeInterval()
+).subscribe(console.log)
+
+/*
+출력 예
+{
+  interval: 517,
+  value: 331
+}
+ */
+```
+
+### timeout
+- 주어진 시간 내에 다음 값 미발행 시 오류 발생
+```javascript
+const { fromEvent } = rxjs
+const { ajax } = rxjs.ajax
+const { timeout, pluck } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    timeout(3000)
+).subscribe(
+    _ => console.log('OK'),
+    err => console.error(err))
+```
+- 클릭을 하고, 3초 안에 다시 재클릭을 하지 않으면 에러가 발생합니다.
+
+```javascript
+ajax('http://127.0.0.1:3000/people/name/random').pipe(
+    pluck('response'),
+    timeout(500)
+).subscribe(console.log, console.error)
+```
+- http 요청을 하고, 특정 시간 내에 응답이 없으면 에러 발생처리를 할때 사용이 가능합니다.
+- timeout error 로 구현가능합니다.
+
+### timeoutWith
+- 주어진 시간 내 다음 값 미발행 시 다른 Observable 개시
+```javascript
+const { fromEvent, interval, of } = rxjs
+const { ajax } = rxjs.ajax
+const { timeoutWith, pluck, scan } = rxjs.operators
+
+fromEvent(document, 'click').pipe(
+    timeoutWith(3000, interval(1000)),
+    scan((acc, x) => { return acc + 1 }, 0)
+).subscribe(console.log)
+```
+- 3초 동안 구독물이 발행되지 않으면 다른 옵저버블 실행
+```javascript
+ajax('http://127.0.0.1:3000/people/name/random').pipe(
+    pluck('response'),
+    timeoutWith(500, of({
+        id: 0,
+        first_name: 'Hong',
+        last_name: 'Gildong',
+        role: 'substitute'
+    }))
+).subscribe(console.log, console.error)
+```
+- HTTP 통신의 응답이 5초동안 없으면, 다른 옵저버블로 값을 사용할 수 있습니다.
 
 ## 스트림을 결합하는 연산자
 

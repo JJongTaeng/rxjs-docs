@@ -365,6 +365,57 @@ fromEvent(document, 'click').pipe(
 ) // x 좌표가 200 보다 작은 경우만 발행
 ```
 
+#### takeUntil 
+- 기준이 되는 스트림이 발행하기까지
+
+```javascript
+const { interval, timer, fromEvent } = rxjs
+const { ajax } = rxjs.ajax
+const { takeUntil, pluck, tap } = rxjs.operators
+
+obs1$ = interval(1000)
+obs2$ = fromEvent(document, 'click')
+
+obs1$.pipe(
+  takeUntil(obs2$)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+```
+- 두개의 옵저버블이 있음
+- interval을 발생시키는 옵저버블을 구독하면 1 씩 증가하면서 console.log 실행
+- takeUntil 옵저버블이 실행하면, 기존에 실행중이던 스트림이 중지된다.
+- 정리하면 takeUntil로 스트림이 실행될 때 까지 스트림이 발행된다.
+- 위의 예제로 예를들면 intaval이 발생하다가~ 클릭이 발생하면! interval을 중지시키고 'COMPLETE' 출력
+
+```javascript
+obs1$ = fromEvent(document, 'click')
+obs2$ = timer(5000)
+
+obs1$.pipe(
+  pluck('x'),
+  takeUntil(obs2$)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+```
+- 이 예시로보면, 클릭 이벤트가 발생하다가~ 5초가 지나면 더 구독이 완료된다!
+```javascript
+interval(50).pipe(
+    takeUntil(
+        ajax('http://127.0.0.1:3000/people/name/random').pipe(
+            pluck('response'),
+            tap(console.log)
+        )
+    )
+).subscribe(console.log)
+```
+- 실제 사용 예시로 위 예시를 들 수 있습니다.
+- ajax 요청을 계속 하다가 응답이 왔을 때! 스트림이 완료됩니다. 
 ### skip 관련 Operator
 #### skip
 - 앞에서부터 N개씩 건너뛰기
@@ -396,7 +447,110 @@ fromEvent(document, 'click').pipe(
     _ => console.log('COMPLETE')
 )
 ```
+
+#### skipLast
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { skipLast, pluck } = rxjs.operators
+
+range(1, 20).pipe(
+  skipLast(5)
+).subscribe(console.log)
+```
+
+```javascript
+interval(1000).pipe(
+    skipLast(5)
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+- 5초동안 아무 값 출력 없다가 0부터 출력합니다.
+- 이유는 스트림에서 마지막 5개를 생략해야하는데, 0 ~ 4가 스트림이 발행되고 5가 발행된다면 일단 0은 뒤에서 5개를 스킵해도 출력되어야 하는 값이기 때문에 0부터 출력을 시작합니다.
+- 이후 마찬가지로 6, 7, 8이 발행되면서 0, 1, 2는 뒤의 값이 스킵되어도 발행되어야하기 때문에 출력됩니다.
+- 정리하면 현재까지 나온 값들중 마지막 5개를 스킵한 값이 출력됩니다.
+```javascript
+fromEvent(document, 'click').pipe(
+    skipLast(5),
+    pluck('x')
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+- 위의 이벤트도 마찬가지로 5번 클릭할 때까지는 아무값도 출력하지 않다가 6번째 클릭부터 1첫째 값부터 출력을 시작합니다.
+- 뒤에서 5개를 생략하더라도 첫번째 값은 출력되어야하기 때문입니다.
+- 출력되는 값은 현재 클릭한 값보다 5회 이전의 값을 의미합니다.
+
+#### skipWhile
+- ~ 하는 동안 건너뛰기
+```javascript
+const { range, interval, fromEvent } = rxjs
+const { skipWhile, filter, pluck } = rxjs.operators
+range(1, 20).pipe(
+  skipWhile(x => x <= 10)
+).subscribe(console.log)
+
+interval(1000).pipe(
+  skipWhile(x => x < 5)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+
+fromEvent(document, 'click').pipe(
+  pluck('x'),
+  skipWhile(x => x < 200),
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+```
+- takeWhile의 반대로 조건에 충족하는 값은 생략합니다.
+
+#### skipUntil
+- 기준이 되는 스트림이 발행하고부터
+```javascript
+const { interval, timer, fromEvent } = rxjs
+const { skipUntil, pluck } = rxjs.operators
+
+const obs1$ = interval(1000)
+const obs2$ = fromEvent(document, 'click')
+
+obs1$.pipe(
+  skipUntil(obs2$)
+).subscribe(
+  console.log,
+  err => console.error(err),
+  _ => console.log('COMPLETE')
+)
+```
+- takeUntil의 반대 의미로 takeUntil 옵저버블이 발생하기 전까지는 발행하지 않다가 발생하면 발행 시작
+- 예제로 설명하면 아무 동작없다가 클릭 이벤트 발생 시 발행 시작
+
+```javascript
+const obs1$ = fromEvent(document, 'click')
+const obs2$ = timer(5000)
+
+obs1$.pipe(
+    pluck('x'),
+    skipUntil(obs2$)
+).subscribe(
+    console.log,
+    err => console.error(err),
+    _ => console.log('COMPLETE')
+)
+```
+- 5초간 클릭이 되지 않다가 5초후부터 클릭이 가능해집니다.
+- 5초 동안은 skipUntil로 발행이 skip되기 때문에!
+
 ## 시간을 다루는 연산자
+
 
 ## 스트림을 결합하는 연산자
 
